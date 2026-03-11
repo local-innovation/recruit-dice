@@ -155,8 +155,10 @@ const SEGMENTS=12,SEG_DEG=360/SEGMENTS,segNums=[];for(let i=0;i<SEGMENTS;i++)seg
 const MSGS_L={rolling:['ドキドキ！','いけー！','それっ！'],spinning:['何が出る？','ワクワク！','回れ〜！'],gacha:['キラキラ…！','お願い！','何かな？'],celebrate:['やったー！','すごい！','おー！✨']};
 const MSGS_R={rolling:['がんばれ！','よいしょ！','えいっ！'],spinning:['どこ止まる？','ハラハラ…','来い来い！'],gacha:['ガチャ…！','出ろー！','ドキドキ！'],celebrate:['ナイス！🎉','出た出た！','おめでと！']};
 function rMsg(o){return o[Math.floor(Math.random()*o.length)];}
-function setChars(anim,msgType){const l=document.getElementById('charL'),r=document.getElementById('charR'),bl=document.getElementById('bubbleL'),br=document.getElementById('bubbleR');l.className='char-icon '+anim;r.className='char-icon '+anim;if(msgType){bl.textContent=rMsg(MSGS_L[msgType]);br.textContent=rMsg(MSGS_R[msgType]);bl.classList.add('show');br.classList.add('show');}}
-function resetChars(){document.getElementById('charL').className='char-icon';document.getElementById('charR').className='char-icon';document.getElementById('bubbleL').classList.remove('show');document.getElementById('bubbleR').classList.remove('show');}
+let charResetTimer=null;
+function setChars(anim,msgType){if(charResetTimer){clearTimeout(charResetTimer);charResetTimer=null;}const l=document.getElementById('charL'),r=document.getElementById('charR'),bl=document.getElementById('bubbleL'),br=document.getElementById('bubbleR');l.className='char-icon '+anim;r.className='char-icon '+anim;if(msgType){bl.textContent=rMsg(MSGS_L[msgType]);br.textContent=rMsg(MSGS_R[msgType]);bl.classList.add('show');br.classList.add('show');}}
+function resetChars(){if(charResetTimer){clearTimeout(charResetTimer);charResetTimer=null;}document.getElementById('charL').className='char-icon';document.getElementById('charR').className='char-icon';document.getElementById('bubbleL').classList.remove('show');document.getElementById('bubbleR').classList.remove('show');}
+function resetCharsAfter(ms){if(charResetTimer)clearTimeout(charResetTimer);charResetTimer=setTimeout(resetChars,ms);}
 
 // ===== AUDIO =====
 function ac(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==='suspended')audioCtx.resume();return audioCtx;}
@@ -217,7 +219,7 @@ function drawGachaIdle(){const cv=document.getElementById('gachaCanvas'),c=cv.ge
 function setMode(m){if(busy)return;mode=m;document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active',b.dataset.mode===m));document.getElementById('diceStage').classList.toggle('hidden',m!=='dice');document.getElementById('rouletteStage').classList.toggle('hidden',m!=='roulette');document.getElementById('gachaStage').classList.toggle('hidden',m!=='gacha');document.getElementById('rollBtn').textContent={dice:'スタート！',roulette:'まわす！',gacha:'ガチャを引く！'}[m];document.getElementById('resultNum').className='result-num';document.getElementById('resultNum').textContent='';resetChars();if(m==='gacha')drawGachaIdle();}
 
 // ===== REVEAL =====
-function doFx(num){const colors={1:'#3a7bd5',2:'#e8871e',3:'#e85d75'};const pcx=window.innerWidth/2,pcy=window.innerHeight/2;playFanfare(num);screenFlash(colors[num]);screenShake();spawnBurst(colors[num],pcx,pcy,40);setTimeout(()=>spawnConfetti(pcx,pcy,50),100);setTimeout(()=>spawnStars(pcx,pcy,10),180);setChars('celebrate','celebrate');setTimeout(resetChars,2500);hist.push(num);if(hist.length>20)hist.shift();renderHist();}
+function doFx(num){const colors={1:'#3a7bd5',2:'#e8871e',3:'#e85d75'};const pcx=window.innerWidth/2,pcy=window.innerHeight/2;playFanfare(num);screenFlash(colors[num]);screenShake();spawnBurst(colors[num],pcx,pcy,40);setTimeout(()=>spawnConfetti(pcx,pcy,50),100);setTimeout(()=>spawnStars(pcx,pcy,10),180);setChars('celebrate','celebrate');resetCharsAfter(3000);hist.push(num);if(hist.length>20)hist.shift();renderHist();}
 function revealResult(num){const rd=document.getElementById('resultNum');rd.textContent=num;rd.className='result-num reveal c'+num;doFx(num);}
 
 // ===== DICE =====
